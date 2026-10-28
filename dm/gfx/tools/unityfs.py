@@ -111,7 +111,7 @@ class NoTree(ValueError):
     """the serialized file has no type tree and no tree of the same class and hash to borrow"""
 
 # Type trees written out for players whose serialized files carry none and that ship no bundle to borrow one from (Brain Memory Training Academy, Unity 2022.3.5f1: only Data/*.assets;
-# Patrick's Parabox, Unity 2020.3.30f1: only the built-in shaders in Data/Resources).
+# Patrick's Parabox, Unity 2020.3.30f1: only the built-in shaders in Data/Resources; FAR: Lone Sails, Unity 2019.1.7f1: no bundles at all).
 # {(class ID, type hash): (root type, layout)}. The layout is one struct per line, "Name: type field; type field; …", in serialization order. A type is a primitive, a struct of the layout,
 # string, vector<element name:type>, map<data:pair(key type,value type)>; a trailing ~ = the container's Array is not aligned after it, ! = the field itself is aligned after it (the 0x4000 flags).
 # The structs up to SerializedProgramParameters are the same in both layouts below
@@ -200,6 +200,11 @@ PPtr<Shader>: int m_FileID; SInt64 m_PathID
 PPtr<Texture>: int m_FileID; SInt64 m_PathID
 Shader: string m_Name; SerializedShader m_ParsedForm; vector<data:unsigned int> platforms; vector<data:unsigned int> offsets; vector<data:unsigned int> compressedLengths; vector<data:unsigned int> decompressedLengths; vector<data:UInt8> compressedBlob; vector<data:PPtr<Shader>> m_Dependencies; map<data:pair(string,PPtr<Texture>)>~ m_NonModifiableTextures; bool! m_ShaderIsBaked
 '''
+# The Unity 2019.1 Shader (FAR: Lone Sails, Unity 2019.1.7f1: no bundles at all, 136 Shader objects in Data/*.assets and Data/Resources), from Unity 2019.1.7f1's type tree as
+# AssetRipper's TypeTreeDumps records it (StructsDump/release/2019.1.7f1.dump): the 2018.3 layout with a global and a local keyword index list per subprogram instead of one
+# keyword list (checked node for node, 1,345 nodes with the alignment flags; its 41 stripped Shader objects in the two Data/Resources files read to their exact ends)
+SHADER_2019_1 = SHADER_2018_3.replace('vector<data:UInt16> m_KeywordIndices; ',
+                                     'vector<data:UInt16> m_GlobalKeywordIndices; vector<data:UInt16> m_LocalKeywordIndices; ')
 # The Unity 2022.3 ComputeShader (Monster Train 2, Unity 2022.3.54f1: 12 in Data/sharedassets2.assets, which carries no type trees, and no bundle has one), from Unity 2022.3.54f1's type tree
 # as AssetRipper's TypeTreeDumps records it (StructsDump/release/2022.3.54f1.dump). Each kernel variant's code is a program code of one stage, compute (the layout of a Shader's subprogram code)
 COMPUTE_2022_3 = '''ComputeShaderResource: string name; string generatedName; int bindPoint; int samplerBindPoint; int texDimension
@@ -226,6 +231,7 @@ KNOWN_TREES = {(CLASS_SHADER, bytes.fromhex('ea424a5fc1e48db62144df956f9e1005'))
                (CLASS_SHADER, bytes.fromhex('2ec7223dce3af4232b14ae1441bd7999')): ('Shader', SHADER_6000_0),
                (CLASS_SHADER, bytes.fromhex('a30e3dcf6c6d25153d6f64e5e41caf4e')): ('Shader', SHADER_2020_3),
                (CLASS_SHADER, bytes.fromhex('8db760073e1392061e4a36995f0735af')): ('Shader', SHADER_2018_3),
+               (CLASS_SHADER, bytes.fromhex('ba38e7fa8c2561e09fad219bd4b98f3b')): ('Shader', SHADER_2019_1),
                (CLASS_COMPUTE_SHADER, bytes.fromhex('bfdf63ab0ce84d5a2c765ee560d90fe7')): ('ComputeShader', COMPUTE_2022_3),
                (CLASS_COMPUTE_SHADER, bytes.fromhex('1a95529ac2eb1a97cd9d2a4356bd722f')): ('ComputeShader', COMPUTE_2019_4)}
 
