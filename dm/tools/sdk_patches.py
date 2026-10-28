@@ -165,6 +165,16 @@ CUTS = {
     (0x336bf0, 'e9230b32', '097ca052', 'AddressRegionManager constructor: length of the node area registered as an occupied region orr w9,wzr,#0x3fe00000 → mov w9,#0x3e00000'),
     (0x336d5c, 'ea030232', '0a40a052', 'AllocateAddressRegion: alignment of regions of 1 GB and more orr w10,wzr,#0x40000000 → mov w10,#0x2000000 (32 MB, as from 32 MB up)'),
   ],
+  # SDK 8.2.0 sdk 3ae34e68 (Captain Toad: Treasure Tracker 1.4.2 and The Legend of Zelda: Link's Awakening 1.1.0, neither of which has virtual address memory and never makes an
+  # address region): the node area cut, as the SDK 8.2.1 build above, whose AddressRegionManager this is at the same offsets (the constructor sdk+0x336b40, the limit +0x336b50 and the
+  # occupied length +0x336bf0, both orr w9,wzr,#0x3fe00000; VammManager::AllocateAddressRegion aligns a region by its size at +0x336d5c). FAR: Lone Sails' NPDM declares 16 MB of
+  # system resource, so nninitStartup (main+0xba2f60, the call at +0xba2fd0) gives StandardAllocator::Initialize(nullptr, pool − used, true) the whole application pool as one address
+  # region; its assert at sdk+0x2e76cc (+0xd0 of Initialize) aborted after CentralHeap::Init failed, the heap check reporting "the host stopped before nnMain": the 1 GB node area
+  # left 3.375 GB of the 4.375 GB alias region, and the working run maps that region up to +3.89 GB of it
+  '3ae34e689d7a35f13cbf42bfd672af8b': [
+    (0x336b50, 'e9230b32', '097ca052', 'AddressRegionManager constructor: node area limit orr w9,wzr,#0x3fe00000 → mov w9,#0x3e00000'),
+    (0x336bf0, 'e9230b32', '097ca052', 'AddressRegionManager constructor: length of the node area registered as an occupied region orr w9,wzr,#0x3fe00000 → mov w9,#0x3e00000'),
+  ],
   # SDK 10.4.1 sdk d9add76fc264 (Advance Wars 1+2: Re-Boot Camp 1.0.0, Unity 2020.2.1f3; The Great Ace Attorney Chronicles 1.0.0, which has no virtual address memory and never makes an
   # address region): the node area cut, and regions of 1 GB and more aligned to 32 MB, as DRAGON QUEST XI S's SDK 7.3.2 build, whose AddressRegionManager this is at other offsets.
   # nninitStartup (main+0x365310) calls StandardAllocator::Initialize(nullptr, pool − used) with virtual address memory, which aborted at its CentralHeap::Init (sdk+0x2ee060), and that region
