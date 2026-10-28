@@ -9,6 +9,14 @@ CUTS = {
     (0x3464cc, '09fca752', '097ca052', 'AddressRegionManager occupied node area: 1 GB to 62 MB'),
     (0x34662c, '0a00a852', '0a40a052', 'AllocateAddressRegion: align regions of 1 GB and more to 32 MB'),
   ],
+  # Snow Bros. Special 1.0.2 (v131072) sdk (SDK 12.3.11, the same AddressRegionManager as Engage's SDK 12.3.7 at the same offsets: constructor sdk+0x346420, the node area limit
+  # +0x346430 and the occupied length +0x3464cc): the node area cut. nninitStartup (main+0x99c5ac, the call at +0x99c620) gives StandardAllocator::Initialize(nullptr, pool − used, true)
+  # the whole application pool as one address region (the NPDM declares 16 MB of system resource); its assert at sdk+0x2f1224 (Initialize+0xd4) aborted after CentralHeap::Init failed,
+  # the heap check reporting "the host stopped before nnMain"
+  '8ccebca02b2d89f3250b33e19a8ea803': [
+    (0x346430, '08fca752', '087ca052', 'AddressRegionManager constructor: node area limit mov w8,#0x3fe00000 → mov w8,#0x3e00000'),
+    (0x3464cc, '09fca752', '097ca052', 'AddressRegionManager constructor: length of the node area registered as an occupied region mov w9,#0x3fe00000 → mov w9,#0x3e00000'),
+  ],
   # Pokemon Brilliant Diamond 1.3.0 (SDK 11.4.3): nninitStartup (main+0x2c1d5c) gives pool - used to StandardAllocator with virtual address memory.
   # Its first CentralHeap::Init aborts at sdk+0x2f98e4: the 1 GB node area leaves no room for the 1 GB-aligned 3.14 GB reservation in a 4.375 GB alias region.
   # The constructor (sdk+0x34e0b8) is the same mechanism as Engage's below: the limit and the occupied length must both shrink to 62 MB.
