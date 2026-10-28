@@ -258,6 +258,18 @@ ComputeShaderCB: string name; int byteSize; vector<data:ComputeShaderParam> para
 ComputeShaderVariant: int targetRenderer; int targetLevel; vector<data:ComputeShaderKernel> kernels; vector<data:ComputeShaderCB> constantBuffers; bool! resourcesResolved
 ComputeShader: string m_Name; vector<data:ComputeShaderVariant> variants
 '''
+# The Unity 2020.3 ComputeShader (FAR: Changing Tides, Unity 2020.3.21f1: 116 objects in nine Data/*.assets files and Data/Resources, which carry no type trees and whose one bundle has no
+# ComputeShader), from Unity 2020.3.21f1's type tree as AssetRipper's TypeTreeDumps records it (StructsDump/release/2020.3.21f1.dump), checked node for node (143 nodes, the alignment flags
+# included). Between the 2019.4 and 2022.3 layouts: kernels keyed by keyword set in variantMap, each with its own code, and no requirements. All 116 objects read to their exact ends
+COMPUTE_2020_3 = '''ComputeShaderResource: string name; string generatedName; int bindPoint; int samplerBindPoint; int texDimension
+ComputeShaderBuiltinSampler: unsigned int sampler; int bindPoint
+ComputeShaderKernel: vector<data:unsigned int> cbVariantIndices; vector<data:ComputeShaderResource> cbs; vector<data:ComputeShaderResource> textures; vector<data:ComputeShaderBuiltinSampler> builtinSamplers; vector<data:ComputeShaderResource> inBuffers; vector<data:ComputeShaderResource> outBuffers; vector<data:UInt8> code; staticvector<data:unsigned int>~ threadGroupSize
+ComputeShaderKernelParent: string name; map<data:pair(string,ComputeShaderKernel)>~ variantMap; vector<data:string> globalKeywords; vector<data:string> localKeywords
+ComputeShaderParam: string name; int type; unsigned int offset; unsigned int arraySize; unsigned int rowCount; unsigned int colCount
+ComputeShaderCB: string name; int byteSize; vector<data:ComputeShaderParam> params
+ComputeShaderPlatformVariant: int targetRenderer; int targetLevel; vector<data:ComputeShaderKernelParent> kernels; vector<data:ComputeShaderCB> constantBuffers; bool! resourcesResolved
+ComputeShader: string m_Name; vector<data:ComputeShaderPlatformVariant> variants
+'''
 CLASS_COMPUTE_SHADER = 72
 KNOWN_TREES = {(CLASS_SHADER, bytes.fromhex('ea424a5fc1e48db62144df956f9e1005')): ('Shader', SHADER_2022_3),
                (CLASS_SHADER, bytes.fromhex('2ec7223dce3af4232b14ae1441bd7999')): ('Shader', SHADER_6000_0),
@@ -266,7 +278,8 @@ KNOWN_TREES = {(CLASS_SHADER, bytes.fromhex('ea424a5fc1e48db62144df956f9e1005'))
                (CLASS_SHADER, bytes.fromhex('ba38e7fa8c2561e09fad219bd4b98f3b')): ('Shader', SHADER_2019_1),
                (CLASS_SHADER, bytes.fromhex('a70f7abc6586fb35b3a0641aa81e9375')): ('Shader', SHADER_5_6),
                (CLASS_COMPUTE_SHADER, bytes.fromhex('bfdf63ab0ce84d5a2c765ee560d90fe7')): ('ComputeShader', COMPUTE_2022_3),
-               (CLASS_COMPUTE_SHADER, bytes.fromhex('1a95529ac2eb1a97cd9d2a4356bd722f')): ('ComputeShader', COMPUTE_2019_4)}
+               (CLASS_COMPUTE_SHADER, bytes.fromhex('1a95529ac2eb1a97cd9d2a4356bd722f')): ('ComputeShader', COMPUTE_2019_4),
+               (CLASS_COMPUTE_SHADER, bytes.fromhex('d0171b849bb064b2424893e7d4809be5')): ('ComputeShader', COMPUTE_2020_3)}
 
 def _split_top(s, sep):   # s split at sep outside <> and ()
     out, depth, cur = [], 0, ''

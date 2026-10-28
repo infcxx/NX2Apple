@@ -17,6 +17,14 @@ CUTS = {
     (0x346430, '08fca752', '087ca052', 'AddressRegionManager constructor: node area limit mov w8,#0x3fe00000 → mov w8,#0x3e00000'),
     (0x3464cc, '09fca752', '097ca052', 'AddressRegionManager constructor: length of the node area registered as an occupied region mov w9,#0x3fe00000 → mov w9,#0x3e00000'),
   ],
+  # FAR: Changing Tides 1.1.0 (v65536) sdk (SDK 13.3.0, the build Portal 1.0.3 and Ghost Trick: Phantom Detective 1.0.0 ship, neither of which has virtual address memory): the
+  # node area cut. nninitStartup (main+0x3ac060) gives StandardAllocator::Initialize(nullptr, pool − used, true) the whole application pool as one address region (the NPDM declares
+  # 16 MB of system resource); its assert at sdk+0x32472c (Initialize+0xd4) aborted after CentralHeap::Init failed, the heap check reporting "the host stopped before nnMain".
+  # The constructor is at sdk+0x37bce0 (the limit +0x37bcf0 and the occupied length +0x37bd8c, both mov w8/w9,#0x3fe00000)
+  '2bf3519216f5b9d3e8ce26863c2e98b6': [
+    (0x37bcf0, '08fca752', '087ca052', 'AddressRegionManager constructor: node area limit mov w8,#0x3fe00000 → mov w8,#0x3e00000'),
+    (0x37bd8c, '09fca752', '097ca052', 'AddressRegionManager constructor: length of the node area registered as an occupied region mov w9,#0x3fe00000 → mov w9,#0x3e00000'),
+  ],
   # Pokemon Brilliant Diamond 1.3.0 (SDK 11.4.3): nninitStartup (main+0x2c1d5c) gives pool - used to StandardAllocator with virtual address memory.
   # Its first CentralHeap::Init aborts at sdk+0x2f98e4: the 1 GB node area leaves no room for the 1 GB-aligned 3.14 GB reservation in a 4.375 GB alias region.
   # The constructor (sdk+0x34e0b8) is the same mechanism as Engage's below: the limit and the occupied length must both shrink to 62 MB.
