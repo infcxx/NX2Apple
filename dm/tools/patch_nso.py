@@ -761,6 +761,18 @@ def tail_call_at_end(insl, j):
         if 'x18' not in [p.reg_name(r) for r in p.regs_access()[1]]: continue
         return p.mnemonic == 'ldr' and bool(re.fullmatch(r'x18, \[(x\d+|sp)(, #(0x[0-9a-f]+|\d+))?\]', p.op_str))
     return False
+def tail_call_dispatch(insl, j):
+    """A mid-function br x18 that leaves this frame: Unity IL2CPP's interface and virtual dispatch loads the (method pointer, method info) pair and gives the frame back right
+    before it jumps, so the two are a tail call, not a jump table. Ori and the Will of the Wisps (Unity IL2CPP) main+0x1b56540: ldp x18, x10, [x10]; ...argument moves...;
+    ldp x29, x30, [sp, #0x80]; add sp, sp, #0x90; br x18, with the method's error path decoded after it in the same function (its eh_frame range ends 0xac later). The last
+    write of x18 must be that ldp pair load: a jump table computes x18 from an adr or an indexed add instead."""
+    if j < 2: return False
+    q = insl[j - 1]
+    if not ((q.mnemonic == 'add' and q.op_str.startswith('sp, sp, #')) or (q.mnemonic == 'ldp' and q.op_str.startswith('x29, x30, [sp], #'))): return False
+    for p in reversed(insl[:j]):
+        if 'x18' not in [p.reg_name(r) for r in p.regs_access()[1]]: continue
+        return p.mnemonic == 'ldp' and bool(re.fullmatch(r'x18, (x\d+|w\d+), \[(x\d+|sp)(, #(0x[0-9a-f]+|\d+))?\]', p.op_str))
+    return False
 def tail_call(insl, j):
     """Keep the existing terminal-tail rule; extend only the framed thunk with
     a separate error call after its tail jump (Warm Snow, Unity IL2CPP).
@@ -768,6 +780,7 @@ def tail_call(insl, j):
     only one forward null guard, this tail jump, and the trailing error call.
     This deliberately does not generalize arbitrary mid-function br x18."""
     if j + 1 == len(insl): return tail_call_at_end(insl, j)
+    if tail_call_dispatch(insl, j): return True
     if j < 4 or any(b.address != a.address + 4 for a, b in zip(insl, insl[1:])): return False
     suffix = insl[j + 1:]
     if suffix[0].mnemonic != 'bl' or any(p.mnemonic != 'udf' for p in suffix[1:]): return False
